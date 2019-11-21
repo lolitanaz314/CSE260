@@ -198,13 +198,16 @@ public class Board {
 				row--;
 			}
 			else {
-				continue;
+				break;
 			}
 		}
 		
+		if (row > 0)
+			++row;
+		
 		while (row < squares.length && squares[row][y_initial].isOccupied()) {
 			vertSquareList.add(squares[row][y_initial]);
-			row++;
+			++row;
 		}
 		
 		return vertSquareList;
@@ -225,12 +228,15 @@ public class Board {
 			}
 			
 			else {
-				continue;
+				break;
 			}
 		}
 		
+		if (col > 0)
+			++col;
+	
 		// increment column to form word (add tiles to ArrayList)
-		while (col - 1 < squares.length && squares[x_initial][col+1].isOccupied()) {
+		while (col < squares.length && squares[x_initial][col].isOccupied()) {
 			horizSquareList.add(squares[x_initial][col]);
 			++col;
 		}
@@ -279,4 +285,3 @@ public class Board {
 		return true;
 	}
 }
-
