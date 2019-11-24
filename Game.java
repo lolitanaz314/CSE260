@@ -26,21 +26,114 @@ public class Game {
 		
 		setupGame();
 		
-		String keyWord = "yes";
-		boolean terminatingInput = false;
+		Player p = players.get(playerTurn);
 		
 		ArrayList<Square> squareList = new ArrayList<>();
-		String answer = null;
 		
+		// prompt for letters until player says "yes"
+		promptPlayerForSquares(p, squareList);
+		
+		
+		if (board.isAligned()) {
+			
+			HashSet<ArrayList<Square>> bucket = makeSetOutOfWordLists(squareList);
+			
+			ArrayList<String> listOfWords = board.getWords(bucket);
+			
+			System.out.println("the squares:");
+			for (Square s : squareList)
+				s.paint();
+			
+			if (listOfWords.isEmpty()) {
+				System.out.println("Word too small! Try again");
+				undoMove(squareList, p);
+				promptPlayerForSquares(p, squareList);
+			}
+				
+			// for debugging
+			
+			System.out.println("list of words formed: ");
+			
+			for (String s : listOfWords) {
+				System.out.print(s + " mars");
+			}
+			
+			// IF the list of words are all in the dictionary
+			for (String s : listOfWords) {
+				String lowerCase = s.toLowerCase();
+				
+				int scoresOfLetters;
+				
+				if (dictionary.isValidWord(lowerCase)) {
+					
+					scoresOfLetters = scoreSquares(bucket);
+					p.changeScore(scoresOfLetters);
+					displayRacksAndScores();
+					
+					//changeplayerturn
+					//prompt squares from next player
+				}
+				
+				else {
+					System.out.println("Not valid words! Try again");
+					undoMove(squareList, p);
+					promptPlayerForSquares(p, squareList);
+				}
+			}
+		}
+		
+		else {
+			System.out.println("Board is not aligned! Try again");
+			undoMove(squareList, p);
+			promptPlayerForSquares(p, squareList);
+			
+		}
+	}
+	
+	
+	/*
+	 * 
+	 * setUpGame();
+	 * 
+	 * do {
+	 * 
+	 * Player p = players.get(playerTurn);
+	 * 
+	 * onePlayerTurn(p);
+	 * 
+	 * nextTurn();
+	 * 
+	 * } while (!isGameOver);
+	 * 
+	 * playerWonMessage();
+	 * 
+	 */
+	
+	// one player turn
+	public static void onePlayerTurn(Player p) {
+		
+	}
+	
+	public static void displayRacksAndScores () {
+		for (Player player : players) {
+			System.out.println(player.getName() + "'s rack:          " + player.getName() + "'s score: " + player.getScore());
+			player.paintRack();
+			System.out.println("\n\n");
+		}
+	}
+	
+	// prompt user to enter tiles until they say "yes"
+	// places tiles on board (changes state of the board)
+	public static void promptPlayerForSquares(Player p, ArrayList<Square> squareList) {
+		
+		String keyWord = "yes";
+		boolean terminatingInput = false;
+		String answer = null;		
 		
 		do {
-			Player p = players.get(playerTurn);
-			
-			// change player turn later
-			
 			// one tile placed on the board - that means one square is occupied
 			Square s = playerMove(p);
-
+	
 			if (s == null)
 				continue;
 			squareList.add(s);
@@ -53,25 +146,10 @@ public class Game {
 				break;
 			}
 			
+			if (p.rack.size() == 0)
+				break;
+			
 		} while (!terminatingInput);
-		
-		
-		if (board.isAligned()) {
-			
-			HashSet<ArrayList<Square>> bucket = makeSetOutOfWordLists(squareList);
-			
-			ArrayList<String> listOfWords = board.getWords(bucket);
-			System.out.println("list of words: ");
-			for (String s : listOfWords) {
-				System.out.print(s + ", ");
-			}
-			System.out.println("score: " + scoreSquares(bucket));
-		}
-		
-		else {
-			System.out.println("Board is not aligned! Try again");
-			board.undoBoard(squareList);
-		}
 	}
 	
 	// prompt user to enter number of players
@@ -95,7 +173,6 @@ public class Game {
 		} while (!validInput);
 		
 		ArrayList<String> playerNames = new ArrayList<>();
-		System.out.println("number of players is: " + numPlayers);
 		
 		System.out.println("Enter the names of the players: ");
 		int i = 1;
@@ -108,6 +185,7 @@ public class Game {
 		
 		board = new Board();
 		thisBag = new Bag(); // starting with 100 tiles
+		dictionary = new Dictionary();
 		
 		for (String name : playerNames)
 			players.add(new Player(name));
@@ -139,6 +217,8 @@ public class Game {
 			bucket.add(horizSquareList);
 		}
 		
+		// just to debug
+		/*
 		for (ArrayList<Square> hOrVSquareList : bucket) {
 			
 			for (Square s : hOrVSquareList)  {
@@ -146,6 +226,8 @@ public class Game {
 			}
 			System.out.println();
 		}
+		*/
+		
 		return bucket;
 	}
 	
@@ -208,29 +290,40 @@ public class Game {
 		boolean validInput = false;
 		
 		do {
-			System.out.println("Enter letter from the rack, row and col [0-14]: , all separated by spaces: ");
-			System.out.println("Player rack: ");
 			
-			ArrayList<Tile> playerRack = player.getRack();
-			
-			char letter = Character.toUpperCase(input.next().charAt(0));
-			int row = input.nextInt();
-			int col = input.nextInt();
-			
-			if (player.letterInRack(letter) && row >= 0 && row < Board.ROWS && col >=0 && col < Board.COLS && !board.squares[row][col].isOccupied()) {
+			try {
+				System.out.println("Enter letter from the rack, row and col [0-14]: , all separated by spaces: ");
 				
-				Square filledSquare = placeSquareOnBoard(player, letter, row, col);
-				validInput = true;
-				return filledSquare;
+				System.out.println(player.getName() + "'s rack: ");
+				ArrayList<Tile> playerRack = player.getRack();
+				System.out.println();
+				
+				char letter = Character.toUpperCase(input.next().charAt(0));
+				int row = input.nextInt();
+				int col = input.nextInt();
+			
+			
+				if (player.letterInRack(letter) && row >= 0 && row < Board.ROWS && col >=0 && col < Board.COLS && !board.squares[row][col].isOccupied()) {
+					
+					Square filledSquare = placeSquareOnBoard(player, letter, row, col);
+					validInput = true;
+					return filledSquare;
+				}
+				
+				else {
+					System.out.println("Move is invalid! Try again");
+					validInput = false;
+					return null;
+				}
+			} 
+			
+			catch (Exception e) {
+				System.out.println("Wrong input type! Try again");
 			}
 			
-			else {
-				System.out.println("Move is invalid! Try again");
-				validInput = false;
-				return null;
-				
-			}
 		} while (!validInput);
+		
+		return null;
 	}
 	
 	//input is the squares that are part of legitimate words on board
@@ -291,14 +384,31 @@ public class Game {
 		}
 	}
 	
-	private static boolean checkGameOver() {
+	private static void playerWonMessage () {
+		
+		int maxScore = players.get(0).getScore();
+		Player playerWithMaxScore = players.get(0);
+		
+		for (int i = 1; i < players.size(); i++) {
+			Player p = players.get(i);
+			
+			if (p.getScore() > maxScore) {
+				maxScore = p.getScore();
+				playerWithMaxScore = p;
+			}
+		}
+		
+		System.out.println("Player " + playerWithMaxScore.getName() + " won with a score of " + maxScore);
+	}
+	
+	private static boolean isGameOver() {
 	
 	// game over if bag size == 0 and one of player's rack size == 1
 	
 		if (thisBag.getBagList().size() == 0) {
 			for (Player p : players) {
 				
-				if (p.rack.size() == 1)
+				if (p.rack.size() == 0)
 					return true;
 			}
 		}
