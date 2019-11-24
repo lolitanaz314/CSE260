@@ -14,6 +14,7 @@ import Squares.TripleWordSquare;
 public class Game {
 	
 	private static ArrayList<Player> players = new ArrayList<Player>();
+	private static ArrayList<ArrayList<Tile>> racks = new ArrayList<>();
 	private static Board board;
 	private static Bag thisBag;
 	private static Dictionary dictionary;
@@ -23,117 +24,104 @@ public class Game {
 	
 	public static void main(String [] args) throws IOException {
 		
-		board = new Board();
-		thisBag = new Bag(); // starting with 100 tiles
-		
-		Player p = new Player("Nerses");
-		initializeRack(p);
+		setupGame();
 		
 		String keyWord = "yes";
+		boolean terminatingInput = false;
 		
 		ArrayList<Square> squareList = new ArrayList<>();
-		String answer;
+		String answer = null;
 		
-		/*
+		
 		do {
+			Player p = players.get(playerTurn);
+			
+			// change player turn later
+			
 			// one tile placed on the board - that means one square is occupied
 			Square s = playerMove(p);
-			
-			// store the squares entered into a list so that we can call 
-			// board.makeWords if everything is aligned, or board.undoBoard if everything is not aligned
-			squareList.add(s);
-			
-			System.out.println("Done with move? Enter yes or no");
-			answer = input.nextLine().toLowerCase();
-			
-			
-			// if user enters yes --> board.makeWords(ArrayList<Squares>)
-			
-			
-			// else, if words are in dictionary --> 
-			// getSquaresPartOfWords(ArrayList<Square>) --> input: squares entered by user   output: squares that are part of words formed
-			
-			// scoreSquares(ArrayList<Square>) --> input: squares part of words   output: points for all the squares
-			
-			// after we get coordinates of new letters, store into ArrayList and call board.isAligned() 
-		} while (!(input.nextLine() == keyWord));
-		*/
-		
-		for (int i = 1; i <= 6; i++) {
-			
-			Square s = playerMove(p);
-			
-			
-			// store the squares entered into a list so that we can call 
-			// board.makeWords if everything is aligned, or board.undoBoard if everything is not aligned
-			
+
 			if (s == null)
 				continue;
 			squareList.add(s);
-		}
-		// squareList = {o}, {x}
+			
+			System.out.println("Done with move? Enter yes or no");
+			answer = input.next().toLowerCase();
+			
+			if (answer.equals(keyWord)) {
+				terminatingInput = true;
+				break;
+			}
+			
+		} while (!terminatingInput);
+		
 		
 		if (board.isAligned()) {
 			
-			System.out.println("Square list: ");
-			// JUST FOR TESTING
-			
-			/*
-			for (Square sq : squareList)
-			{
-				sq.paint();
-			}
-				
-			for (Square sq : squareList) {
-				System.out.print("Square:  " );
-				sq.paint();
-				System.out.print(" ||");
-			
-				int x_initial = sq.getCoords().getRow();
-				int y_initial = sq.getCoords().getCol();
-				
-				ArrayList<Square> verticalSquares = board.makeWordVertical(x_initial, y_initial);
-			
-				for (Square s : verticalSquares)
-					s.paint();
-				
-				
-				System.out.println();
-			}
-			*/
-			
-			
 			HashSet<ArrayList<Square>> bucket = makeSetOutOfWordLists(squareList);
 			
-			/*
-			for (Square sq : squareList) {
-				
-				int x_initial = sq.getCoords().getRow();
-				int y_initial = sq.getCoords().getCol();
-				
-				// call makewordVertical + makewordHorizontal on every single square
-				ArrayList<Square> vertSquareList = board.makeWordVertical(x_initial, y_initial);
-				ArrayList<Square> horizSquareList = board.makeWordHorizontal(x_initial, y_initial);
-				
-				bucket.add(vertSquareList);
-				bucket.add(horizSquareList);
+			ArrayList<String> listOfWords = board.getWords(bucket);
+			System.out.println("list of words: ");
+			for (String s : listOfWords) {
+				System.out.print(s + ", ");
 			}
+			System.out.println("score: " + scoreSquares(bucket));
+		}
+		
+		else {
+			System.out.println("Board is not aligned! Try again");
+			board.undoBoard(squareList);
+		}
+	}
+	
+	// prompt user to enter number of players
+	// setup board, racks & bag 
+	public static void setupGame() throws IOException {
+		
+		boolean validInput = false;
+		int numPlayers;
+		
+		System.out.println("How many players? (Enter 2 - 4)");
+		
+		do {
+			numPlayers = input.nextInt();
 			
-			System.out.println("entire word array list: ");
-			for (ArrayList<Square> hOrVSquareList : bucket) {
+			if (numPlayers >= 2 && numPlayers <= 4) 
+				validInput = true;
+			
+			else 
+				System.out.println("Not valid input. Try again");
 				
-				for (Square s : hOrVSquareList)  {
-					s.paint();
-				}
-				System.out.println();
-			}
-			*/
+		} while (!validInput);
+		
+		ArrayList<String> playerNames = new ArrayList<>();
+		System.out.println("number of players is: " + numPlayers);
+		
+		System.out.println("Enter the names of the players: ");
+		int i = 1;
+		
+		while (i <= numPlayers) {
+			String name = input.next();
+	        playerNames.add(name);
+			i++;
+		}
+		
+		board = new Board();
+		thisBag = new Bag(); // starting with 100 tiles
+		
+		for (String name : playerNames)
+			players.add(new Player(name));
+		
+		// initialize racks for all players
+		for (Player player : players) {
+			System.out.println(player.getName() + "'s rack:          " + player.getName() + "'s score: " + player.getScore());
+			initializeRack(player);
+			System.out.println("\n\n");
 		}
 	}
 	
 	// for each entered square in squareList, make horizontal and vertical words as LISTS
 	// add all wordlists to HashSet
-	
 	public static HashSet<ArrayList<Square>> makeSetOutOfWordLists (ArrayList<Square> enteredSquares) {
 		
 		HashSet<ArrayList<Square>> bucket = new HashSet<>();
@@ -158,7 +146,6 @@ public class Game {
 			}
 			System.out.println();
 		}
-		
 		return bucket;
 	}
 	
@@ -179,6 +166,7 @@ public class Game {
 		board.paintBoard(t, row, col);
 		
 		// removes tile from rack
+		// DOESN'T WORK - the rack needs to shrink, but it doesn't
 		p.removeTile(t);
 		
 		Coord playerCoord = new Coord(row, col);
@@ -186,6 +174,17 @@ public class Game {
 		
 		return filledSquare;
 	}
+	
+	// refills rack with squares
+	// undo the board
+	public static void undoMove(ArrayList<Square> enteredSquares, Player p) {
+		
+		board.undoBoard(enteredSquares);
+		
+		for (int i = 0; i < enteredSquares.size(); i++) {
+			p.rack.add(enteredSquares.get(i).getAssignedTile());
+		}
+	} 
 	
 	// EDIT to remove from the bag or player rack!
 	public static void setBlankTile (Tile t, Player p) {
@@ -202,7 +201,9 @@ public class Game {
 		}
 	}
 	
-	// paints the board, removes tile from bag
+	// paints the board
+	// returns null if move is invalid
+	// otherwise, returns square
 	public static Square playerMove (Player player) {
 		boolean validInput = false;
 		
@@ -221,7 +222,6 @@ public class Game {
 				Square filledSquare = placeSquareOnBoard(player, letter, row, col);
 				validInput = true;
 				return filledSquare;
-				
 			}
 			
 			else {
@@ -262,6 +262,8 @@ public class Game {
 			p.rack.add(thisBag.pullRandomTile());
 		}
 		
+		p.paintRack();
+		
 		return p.rack;
 	}
 	
@@ -296,7 +298,7 @@ public class Game {
 		if (thisBag.getBagList().size() == 0) {
 			for (Player p : players) {
 				
-				if (p.rack.size() == 0)
+				if (p.rack.size() == 1)
 					return true;
 			}
 		}
@@ -305,9 +307,7 @@ public class Game {
 	
 	public static void nextTurn() {
 		playerTurn = (playerTurn + 1) % players.size();
-		
 	}
-	
 	
 }
 
