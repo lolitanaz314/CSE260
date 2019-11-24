@@ -244,33 +244,55 @@ public class Board {
 		return horizSquareList;
 	}
 	
-	public ArrayList<String> getWord(Set<ArrayList<Square>> horizontalOrVerticalList) {
-		// for (List<Square> : buc)
+	// returns list words only if their length >= 2
+	public ArrayList<String> getWords(Set<ArrayList<Square>> horizontalOrVerticalList) {
 		
-		return null;
+		ArrayList<String> listOfStrings = new ArrayList<String>();
+		
+		for (ArrayList<Square> listOfSquares : horizontalOrVerticalList) {
+			
+			String word = "";
+			
+			for (Square s : listOfSquares) {
+				char c = s.getLetter();
+				word += c;
+			}
+			
+			if (word.length() >= 2)
+				listOfStrings.add(word);
+		}
+		return listOfStrings;
 	}
 	
-	
-	// returns squares which the legitimate words formed are on. 
-	// supposed to follow same logic as makeWords
-	public Set<Square> getWords (ArrayList <Square> vertOrHorizWordList) {
-		
-		return null;
-		
-	}
-
 	// this is a function that rips off the tiles on the board if the move is illegitimate 
 	// i.e. : if the board is not aligned, if the word(s) formed are not in the dictionary, etc
 	public void undoBoard(ArrayList<Square> enteredSquares) {
 		
+		ArrayList <Coord> coordinateList = new ArrayList<>();
 		for (int i = 0; i < enteredSquares.size(); i++) {
-			
 			Square s = enteredSquares.get(i);
-			int row = s.getCoords().getRow();
-			int col = s.getCoords().getCol();
-			
-			squares[row][col].isOccupied();
+			Coord squareCoords = s.getCoords();
+			coordinateList.add(squareCoords);
 		}
+		
+		int indexInCoordList = 0;
+		
+		while (indexInCoordList < coordinateList.size()) {
+			int row = coordinateList.get(indexInCoordList).getRow();
+		    int col = coordinateList.get(indexInCoordList).getCol();
+		    
+			squares[row][col].setToNull();
+			indexInCoordList++;
+		}
+		
+		//repaint the board
+		for (int r = 0; r < ROWS; r++) {
+			for (int c = 0; c < COLS; c++) {
+				squares[r][c].paint();
+			}
+			System.out.println();
+		}
+		
 	}
 	
 	// this is to make sure that the first player populates middle square (7, 7)
