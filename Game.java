@@ -26,92 +26,70 @@ public class Game {
 		
 		setupGame();
 		
-		Player p = players.get(playerTurn);
+		do {
 		
-		ArrayList<Square> squareList = new ArrayList<>();
+			Player p = players.get(playerTurn);
+			onePlayerTurn(p);
+			nextTurn();
+			
+		} while (!isGameOver());
 		
-		// prompt for letters until player says "yes"
-		promptPlayerForSquares(p, squareList);
-		
-		
-		if (board.isAligned()) {
-			
-			HashSet<ArrayList<Square>> bucket = makeSetOutOfWordLists(squareList);
-			
-			ArrayList<String> listOfWords = board.getWords(bucket);
-			
-			System.out.println("the squares:");
-			for (Square s : squareList)
-				s.paint();
-			
-			if (listOfWords.isEmpty()) {
-				System.out.println("Word too small! Try again");
-				undoMove(squareList, p);
-				promptPlayerForSquares(p, squareList);
-			}
-				
-			// for debugging
-			
-			System.out.println("list of words formed: ");
-			
-			for (String s : listOfWords) {
-				System.out.print(s + " mars");
-			}
-			
-			// IF the list of words are all in the dictionary
-			for (String s : listOfWords) {
-				String lowerCase = s.toLowerCase();
-				
-				int scoresOfLetters;
-				
-				if (dictionary.isValidWord(lowerCase)) {
-					
-					scoresOfLetters = scoreSquares(bucket);
-					p.changeScore(scoresOfLetters);
-					displayRacksAndScores();
-					
-					//changeplayerturn
-					//prompt squares from next player
-				}
-				
-				else {
-					System.out.println("Not valid words! Try again");
-					undoMove(squareList, p);
-					promptPlayerForSquares(p, squareList);
-				}
-			}
-		}
-		
-		else {
-			System.out.println("Board is not aligned! Try again");
-			undoMove(squareList, p);
-			promptPlayerForSquares(p, squareList);
-			
-		}
+		playerWonMessage();
 	}
-	
-	
-	/*
-	 * 
-	 * setUpGame();
-	 * 
-	 * do {
-	 * 
-	 * Player p = players.get(playerTurn);
-	 * 
-	 * onePlayerTurn(p);
-	 * 
-	 * nextTurn();
-	 * 
-	 * } while (!isGameOver);
-	 * 
-	 * playerWonMessage();
-	 * 
-	 */
 	
 	// one player turn
 	public static void onePlayerTurn(Player p) {
 		
+		outerloop:
+		while (true) {
+			//empty SquareList
+			ArrayList<Square> squareList = new ArrayList<>();
+			
+			// prompt for letters until player says "yes"
+			promptPlayerForSquares(p, squareList);
+			
+			if (board.isAligned()) {
+				HashSet<ArrayList<Square>> bucket = makeSetOutOfWordLists(squareList);
+				
+				ArrayList<String> listOfWords = board.getWords(bucket);
+				
+				if (listOfWords.isEmpty()) {
+					System.out.println("Word too small! Try again");
+					undoMove(squareList, p);
+					
+					// redo while loop 
+				}
+				
+				// if list of words is not empty
+				else {
+					for (String s : listOfWords) {
+						String lowerCase = s.toLowerCase();
+						
+						int scoresOfLetters;
+						
+						if (dictionary.isValidWord(lowerCase)) {
+							
+							scoresOfLetters = scoreSquares(bucket);
+							p.changeScore(scoresOfLetters);
+							displayRacksAndScores();
+							refillRack(p);
+							
+							break outerloop;
+						}
+						
+						else {
+							System.out.println("Not valid words! Try again");
+							undoMove(squareList, p);
+						}
+					}
+				}
+			}
+			
+			else {
+				System.out.println("Board is not aligned! Try again");
+				undoMove(squareList, p);
+			}
+		} 
 	}
 	
 	public static void displayRacksAndScores () {
@@ -363,7 +341,7 @@ public class Game {
 	// this is called after words on board have been verified
 	public static void refillRack(Player p) {
 		
-		while (p.rack.size() <= 7)
+		while (p.rack.size() < 7)
 			p.rack.add(thisBag.pullRandomTile());
 	}
 	
