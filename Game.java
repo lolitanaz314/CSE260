@@ -1,3 +1,5 @@
+// MINISCRABBLE
+
 package GameComponents;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,7 +29,6 @@ public class Game {
 		setupGame();
 		
 		do {
-		
 			Player p = players.get(playerTurn);
 			onePlayerTurn(p);
 			nextTurn();
@@ -36,6 +37,7 @@ public class Game {
 		
 		playerWonMessage();
 	}
+	
 	
 	// one player turn
 	public static void onePlayerTurn(Player p) {
@@ -54,6 +56,7 @@ public class Game {
 				ArrayList<String> listOfWords = board.getWords(bucket);
 				
 				if (listOfWords.isEmpty()) {
+					System.out.println();
 					System.out.println("Word too small! Try again");
 					undoMove(squareList, p);
 					
@@ -78,6 +81,7 @@ public class Game {
 						}
 						
 						else {
+							System.out.println();
 							System.out.println("Not valid words! Try again");
 							undoMove(squareList, p);
 						}
@@ -104,9 +108,10 @@ public class Game {
 	// places tiles on board (changes state of the board)
 	public static void promptPlayerForSquares(Player p, ArrayList<Square> squareList) {
 		
-		String keyWord = "yes";
+		char done = 'D';
+		char undo = 'U';
 		boolean terminatingInput = false;
-		String answer = null;		
+		char answer = '\u0000';		
 		
 		do {
 			// one tile placed on the board - that means one square is occupied
@@ -116,12 +121,57 @@ public class Game {
 				continue;
 			squareList.add(s);
 			
-			System.out.println("Done with move? Enter yes or no");
-			answer = input.next().toLowerCase();
+			System.out.println("\nDone with move? Press (D)");
+			System.out.println("\nContinue the move? Press (C)");
+			System.out.println("\nUndo move? Press (U)");
 			
-			if (answer.equals(keyWord)) {
-				terminatingInput = true;
-				break;
+			answer = input.next().toUpperCase().charAt(0);
+			
+			if (answer == undo) {
+				undoSquare(p, s, squareList);
+			}
+			
+			// if player is done entering squares
+			if (answer == done) {
+				
+				// if it's the first move, we want the player to place one of squares on (7, 7)
+				// Set squares to null. If it's an empty board, player should have placed one of squares on (7, 7)
+				
+				ArrayList <Coord> coordinateList = new ArrayList<>();
+				
+				// set board squares to null
+				for (Square sq : squareList) {
+					Coord squareCoords = sq.getCoords();
+					
+					int row = squareCoords.getRow();
+					int col = squareCoords.getCol();
+					board.squares[row][col].setToNull();
+					
+					coordinateList.add(squareCoords);
+				}
+
+				boolean validater = false;
+				for (Coord c : coordinateList) {
+					
+					int row = c.getRow();
+					int col = c.getCol();
+				
+					if (board.isEmptySquares() && row != 7 && col != 7) { // rip off squares and board is empty)
+						validater = true;
+					}
+				}
+				
+				if (validater == true) {
+					System.out.println("You have to place one of the first tiles on (7, 7)! Try again");
+					undoMove(squareList, p);
+				}
+				
+				else {
+					for (Square sq : squareList) 
+						board.squares[sq.getCoords().getRow()][sq.getCoords().getCol()].setAssignedTile(sq.getAssignedTile());
+					terminatingInput = true;
+					break;
+				}
 			}
 			
 			if (p.rack.size() == 0)
@@ -129,6 +179,29 @@ public class Game {
 			
 		} while (!terminatingInput);
 	}
+	
+	public static void makeFirstPlayerPlaceOnMiddleSquare () {
+		
+	}
+	
+	public static void undoSquare(Player p, Square s, ArrayList<Square> list) {
+		
+		// remove from squareList
+		for (int i = 0; i < list.size(); i++) {
+			if (list.get(i).equals(s))
+				list.remove(list.get(i));
+		}
+		
+		// refill rack again
+		p.rack.add(s.getAssignedTile());
+		
+		// clear Square on the board
+		int row = s.getCoords().getRow();
+		int col = s.getCoords().getCol();
+		board.squares[row][col].setToNull();
+		
+	}
+	
 	
 	// prompt user to enter number of players
 	// setup board, racks & bag 
@@ -225,13 +298,10 @@ public class Game {
 		// paints new board with the letter added onto board at specific coordinates
 		board.paintBoard(t, row, col);
 		
-		// removes tile from rack
-		// DOESN'T WORK - the rack needs to shrink, but it doesn't
 		p.removeTile(t);
 		
 		Coord playerCoord = new Coord(row, col);
 		Square filledSquare = new Square(t, playerCoord);
-		
 		return filledSquare;
 	}
 	
@@ -252,35 +322,41 @@ public class Game {
 		char letter2 = Character.toUpperCase((input.next()).charAt(0));
 		t.setLetter(letter2);
 		
-		// if the bag doesn't contain the letter entered, 
-		// CHANGE TO DO WHILE LOOP
-		
 		for (int i = 0; i < thisBag.getBagList().size(); i++) {
 			if (thisBag.getBagList().get(i) == t)
 				thisBag.pullTile(t);
 		}
 	}
 	
-	// paints the board
-	// returns null if move is invalid
-	// otherwise, returns square
+	public static Square placeSquare (Player p) {
+		return null;
+	}
+	
+	
 	public static Square playerMove (Player player) {
 		boolean validInput = false;
 		
 		do {
 			
 			try {
-				System.out.println("Enter letter from the rack, row and col [0-14]: , all separated by spaces: ");
+				System.out.println("3 options (Choose 1, 2 or 3) : ");
+				System.out.println();
+				System.out.println(" (1) Enter letter from the rack, row and col [0-14] , all separated by spaces: ");
+				System.out.println(" (2) Pass turn");
+				System.out.println(" (3) Exchange rack");
 				
+				System.out.println();
 				System.out.println(player.getName() + "'s rack: ");
 				ArrayList<Tile> playerRack = player.getRack();
+				System.out.println();
+				
+				board.paintBoard();
 				System.out.println();
 				
 				char letter = Character.toUpperCase(input.next().charAt(0));
 				int row = input.nextInt();
 				int col = input.nextInt();
-			
-			
+				
 				if (player.letterInRack(letter) && row >= 0 && row < Board.ROWS && col >=0 && col < Board.COLS && !board.squares[row][col].isOccupied()) {
 					
 					Square filledSquare = placeSquareOnBoard(player, letter, row, col);
@@ -344,20 +420,39 @@ public class Game {
 		while (p.rack.size() < 7)
 			p.rack.add(thisBag.pullRandomTile());
 	}
+	/*
+	public static void main (String[] args) {
+		
+		thisBag = new Bag();
+		
+		System.out.println(thisBag.size());
+		Player p = new Player("nerses");
+		initializeRack(p);
+		System.out.println();
+		
+		exchangeTilesInRack(p);
+		
+		System.out.println("new rack");
+		
+		p.paintRack();
+		
+		System.out.print(thisBag.size());
+	}
+	*/
 	
 	// if player doesn't like their tiles in the rack
 	public static void exchangeTilesInRack(Player p) {
 		
-		int rackSize = p.rack.size();
+		int playerRackSize = p.rack.size();
 		
 		// moves tiles from player rack to the bag
-		for (int i = 0; i < rackSize; i++) {
-			Tile t = p.rack.remove(i);
-			thisBag.getBagList().add(t);
+		for (int i = 0; i < playerRackSize; i++) {
+			
+			thisBag.getBagList().add(p.removeAndReturnTile(p.rack.get(0)));
+			
 		}
-		
 		// moves tiles from bag to the rack
-		for (int i = 0; i < rackSize; i++) {
+		for (int i = 0; i < playerRackSize; i++) {
 			p.rack.add(thisBag.pullRandomTile());	
 		}
 	}
@@ -396,7 +491,7 @@ public class Game {
 	public static void nextTurn() {
 		playerTurn = (playerTurn + 1) % players.size();
 	}
-	
 }
+
 
 
