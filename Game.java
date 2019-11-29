@@ -21,6 +21,7 @@ public class Game {
 	private static Bag thisBag;
 	private static Dictionary dictionary;
 	private static int playerTurn = 0;
+	private static int moveCount = 0;
 
 	private static Scanner input = new Scanner(System.in);
 	
@@ -32,6 +33,7 @@ public class Game {
 			Player p = players.get(playerTurn);
 			onePlayerTurn(p);
 			nextTurn();
+			increaseMoveCount();
 			
 		} while (!isGameOver());
 		
@@ -40,25 +42,38 @@ public class Game {
 	
 	
 	// one player turn
+	
+	
 	public static void onePlayerTurn(Player p) {
 		
 		outerloop:
 		while (true) {
-			//empty SquareList
-			ArrayList<Square> squareList = new ArrayList<>();
 			
 			// prompt for letters until player says "yes"
-			promptPlayerForSquares(p, squareList);
+			ArrayList<Square> squareList = promptPlayerForSquareList(p);
+			
+			/*
+			System.out.println("After prompting user for squares: ");
+			for (Square squa : squareList)
+				squa.paint();
+			*/
 			
 			if (board.isAligned()) {
 				HashSet<ArrayList<Square>> bucket = makeSetOutOfWordLists(squareList);
 				
+				
 				ArrayList<String> listOfWords = board.getWords(bucket);
+				
+				System.out.println("The list of words are: ");
+				for (String string : listOfWords)
+					System.out.println(string + " ");
 				
 				if (listOfWords.isEmpty()) {
 					System.out.println();
 					System.out.println("Word too small! Try again");
 					undoMove(squareList, p);
+					
+					System.out.println("move undid");
 					
 					// redo while loop 
 				}
@@ -106,13 +121,18 @@ public class Game {
 	
 	// prompt user to enter tiles until they say "yes"
 	// places tiles on board (changes state of the board)
-	public static void promptPlayerForSquares(Player p, ArrayList<Square> squareList) {
+	// returns an ArrayList<Square>
+	
+	public static ArrayList<Square> promptPlayerForSquareList(Player p) {
 		
 		char done = 'D';
 		char undo = 'U';
 		boolean terminatingInput = false;
 		char answer = '\u0000';		
 		
+		ArrayList<Square> squareList = new ArrayList<>();
+		
+		outerloop:
 		do {
 			// one tile placed on the board - that means one square is occupied
 			Square s = playerMove(p);
@@ -124,6 +144,12 @@ public class Game {
 			System.out.println("\nDone with move? Press (D)");
 			System.out.println("\nContinue the move? Press (C)");
 			System.out.println("\nUndo move? Press (U)");
+			
+			/*
+			System.out.println("Square List:");
+			for (Square squa : squareList)
+				squa.paint();
+			*/
 			
 			answer = input.next().toUpperCase().charAt(0);
 			
@@ -137,51 +163,74 @@ public class Game {
 				// if it's the first move, we want the player to place one of squares on (7, 7)
 				// Set squares to null. If it's an empty board, player should have placed one of squares on (7, 7)
 				
-				ArrayList <Coord> coordinateList = new ArrayList<>();
-				
-				// set board squares to null
-				for (Square sq : squareList) {
-					Coord squareCoords = sq.getCoords();
+				if (moveCount == 0) {
 					
-					int row = squareCoords.getRow();
-					int col = squareCoords.getCol();
-					board.squares[row][col].setToNull();
-					
-					coordinateList.add(squareCoords);
-				}
-
-				boolean validater = false;
-				for (Coord c : coordinateList) {
-					
-					int row = c.getRow();
-					int col = c.getCol();
-				
-					if (board.isEmptySquares() && row != 7 && col != 7) { // rip off squares and board is empty)
-						validater = true;
-					}
-				}
-				
-				if (validater == true) {
-					System.out.println("You have to place one of the first tiles on (7, 7)! Try again");
-					undoMove(squareList, p);
+						boolean validater = false;
+						
+						ArrayList <Coord> coordinateList = new ArrayList<>();
+						
+						for (Square sq : squareList) {
+							Coord squareCoords = sq.getCoords();
+							
+							int row = squareCoords.getRow();
+							int col = squareCoords.getCol();
+							
+							coordinateList.add(squareCoords);
+						}
+						
+						for (Coord c : coordinateList) {
+							int row = c.getRow();
+							int col = c.getCol();
+							
+							/*
+							System.out.println("row for 77: "  + row);
+							System.out.println("col for 77: " + col);
+							*/
+						
+							if (row == 7 && col == 7) { // rip off squares and board is empty)
+								validater = true;
+							}
+							// System.out.println("validater value: " + validater);
+						}
+						
+						if (validater == true) {
+							/*
+							System.out.println("Validation is true, and squares are: ");
+							for (Square sq : squareList) {
+								sq.paint();
+							}
+							*/
+							
+							terminatingInput = true;
+							break outerloop;
+						}
+						
+						else {
+							System.out.println("You have to place one of the first tiles on (7, 7)! Try again");
+							moveCount = 0;
+							undoMove(squareList, p);
+							squareList = new ArrayList<Square>();
+						}
 				}
 				
 				else {
-					for (Square sq : squareList) 
-						board.squares[sq.getCoords().getRow()][sq.getCoords().getCol()].setAssignedTile(sq.getAssignedTile());
 					terminatingInput = true;
-					break;
+					break outerloop;
 				}
+				
 			}
 			
 			if (p.rack.size() == 0)
 				break;
 			
 		} while (!terminatingInput);
+		
+		return squareList;
+		
 	}
 	
-	public static void makeFirstPlayerPlaceOnMiddleSquare () {
-		
+	public static void increaseMoveCount() {
+		moveCount++;
 	}
 	
 	public static void undoSquare(Player p, Square s, ArrayList<Square> list) {
@@ -254,8 +303,9 @@ public class Game {
 	public static HashSet<ArrayList<Square>> makeSetOutOfWordLists (ArrayList<Square> enteredSquares) {
 		
 		HashSet<ArrayList<Square>> bucket = new HashSet<>();
-		
+	
 		for (Square sq : enteredSquares) {
+			
 			
 			int x_initial = sq.getCoords().getRow();
 			int y_initial = sq.getCoords().getCol();
@@ -332,18 +382,20 @@ public class Game {
 		return null;
 	}
 	
-	
+	// ONE MOVE
+	// either return square, pass turn or exchange rack
 	public static Square playerMove (Player player) {
 		boolean validInput = false;
 		
 		do {
-			
 			try {
-				System.out.println("3 options (Choose 1, 2 or 3) : ");
+				System.out.println("-------------------------------");
+				System.out.println(player.getName() + "'s turn");
+				//System.out.println("3 options (Choose 1, 2 or 3) : ");
 				System.out.println();
 				System.out.println(" (1) Enter letter from the rack, row and col [0-14] , all separated by spaces: ");
-				System.out.println(" (2) Pass turn");
-				System.out.println(" (3) Exchange rack");
+				//System.out.println(" (2) Pass turn");
+				//System.out.println(" (3) Exchange rack");
 				
 				System.out.println();
 				System.out.println(player.getName() + "'s rack: ");
