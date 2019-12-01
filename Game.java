@@ -52,12 +52,6 @@ public class Game {
 			// prompt for letters until player says "yes"
 			ArrayList<Square> squareList = promptPlayerForSquareList(p);
 			
-			/*
-			System.out.println("After prompting user for squares: ");
-			for (Square squa : squareList)
-				squa.paint();
-			*/
-			
 			if (board.isAligned()) {
 				HashSet<ArrayList<Square>> bucket = makeSetOutOfWordLists(squareList);
 				
@@ -336,19 +330,24 @@ public class Game {
 	// repaints entire board with the one new tile
 	// returns the Square on which the tile was entered
 	// removes tile from player rack
-	public static Square placeSquareOnBoard(Player p, char letter, int row, int col) {
+	public static Square placeSquareOnBoard(Player p, char letter, int row, int col) throws CloneNotSupportedException {
 		
 		int letterPoints = thisBag.getLetterScore(letter);
 		Tile t = new Tile(letter, letterPoints);
 		
+		Tile copyTile = (Tile) t.clone();
+		
 		if (letter == '?') {
 			setBlankTile(t, p);
+			p.removeTile(copyTile);
+		}
+		
+		else {
+			p.removeTile(t);
 		}
 		
 		// paints new board with the letter added onto board at specific coordinates
 		board.paintBoard(t, row, col);
-		
-		p.removeTile(t);
 		
 		Coord playerCoord = new Coord(row, col);
 		Square filledSquare = new Square(t, playerCoord);
@@ -507,6 +506,9 @@ public class Game {
 		for (int i = 0; i < playerRackSize; i++) {
 			p.rack.add(thisBag.pullRandomTile());	
 		}
+		
+		System.out.println("New rack: ");
+		p.paintRack();
 	}
 	
 	private static void playerWonMessage () {
@@ -544,6 +546,5 @@ public class Game {
 		playerTurn = (playerTurn + 1) % players.size();
 	}
 }
-
 
 
