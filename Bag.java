@@ -138,16 +138,30 @@ public class Bag {
 	        bagList.add(qTile);
 	        bagList.add(zTile);
     }
-
+	
 	
 	// for the end of the game (end game when size == 0)
 	public int size() {
 		return bagList.size();
 	}
 	
+	public ArrayList<Tile> getBagList() {
+		return bagList;
+	}
+	
+	// for blank tiles
+	public boolean pullTile (Tile t) {
+		boolean flag = bagList.remove(t);
+		
+		if (flag)
+			return true;
+		return false;
+	
+	}
+	
 	// do this to refill rack
 	// randomly choose tile out of the bag and remove it 
-	public Tile pullTile() {
+	public Tile pullRandomTile() {
 		
 		int index = (int) (Math.random() * (bagList.size() - 1));
 		Tile pulledTile = bagList.remove(index);
@@ -167,5 +181,4 @@ public class Bag {
 		
 		return letterScore;
 	}
-	
 } 
