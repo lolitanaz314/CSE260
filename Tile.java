@@ -1,10 +1,12 @@
+// MINISCRABBLE
+
 package GameComponents;
 import java.util.*;
 import java.util.Iterator;
 
 import Squares.Square;
 
-public class Tile {
+public class Tile implements Cloneable {
 	
 	/*
 	public static void main(String [] args) {
@@ -64,5 +66,10 @@ public class Tile {
 	
 	public boolean equals(Tile t) {
 		return (this.getLetter() == t.getLetter());
+	}
+	
+	public Object clone() throws CloneNotSupportedException {
+		Tile clone = (Tile)super.clone();
+		return clone;
 	}
 }
