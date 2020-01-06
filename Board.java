@@ -1,3 +1,5 @@
+// MINISCRABBLE
+
 package GameComponents;
 
 import java.io.BufferedReader;
@@ -114,6 +116,15 @@ public class Board {
 				squares[row][col].paint();
 			}
 			
+			System.out.println();
+		}
+	}
+	
+	public void paintBoard() {
+		for (int row = 0; row < ROWS; row++) {
+			for (int col = 0; col < COLS; col++) {
+				squares[row][col].paint();
+			}
 			System.out.println();
 		}
 	}
@@ -244,6 +255,26 @@ public class Board {
 		return horizSquareList;
 	}
 	
+	/*
+	// for the word suggestions
+	public ArrayList<String> getAllWords() {
+		
+		
+		for (int i = 0; i < squares.length; i++) {
+			for (int j = 0; i < squares[i].length; j++) {
+				
+				if (squares[i][j].isOccupied()) {
+					
+					
+				}
+				
+				
+			}
+		}
+	}
+	*/
+	
+	
 	// returns list words only if their length >= 2
 	public ArrayList<String> getWords(Set<ArrayList<Square>> horizontalOrVerticalList) {
 		
@@ -284,7 +315,8 @@ public class Board {
 			squares[row][col].setToNull();
 			indexInCoordList++;
 		}
-		
+		System.out.println();
+		/*
 		//repaint the board
 		for (int r = 0; r < ROWS; r++) {
 			for (int c = 0; c < COLS; c++) {
@@ -292,7 +324,7 @@ public class Board {
 			}
 			System.out.println();
 		}
-		
+		*/
 	}
 	
 	// this is to make sure that the first player populates middle square (7, 7)
@@ -306,4 +338,6 @@ public class Board {
 		}
 		return true;
 	}
+	
+	
 }
