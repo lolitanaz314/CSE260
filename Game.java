@@ -27,84 +27,186 @@ public class Game {
 	
 	public static void main(String [] args) throws IOException {
 		
+		new Game();
+	}
+	
+	public Game() throws IOException {
+		
 		setupGame();
 		
 		do {
 			Player p = players.get(playerTurn);
 			onePlayerTurn(p);
-			nextTurn();
-			increaseMoveCount();
 			
 		} while (!isGameOver());
 		
 		playerWonMessage();
 	}
 	
+	/*
+	do {
+		try {
+			answer = input.nextInt();
+			System.out.println("hi");
+			
+			if (answer == 1 | answer == 2 | answer == 3) {
+				rightInput = true;
+			}
+			else {
+				System.out.println("Input has to be either 1, 2 or 3");
+				System.out.println(" (1) Enter Squares");
+				System.out.println(" (2) Pass turn");
+				System.out.println(" (3) Exchange rack");
+			}
+		}
+		
+		catch (Exception e) {
+			System.out.println("Input has to be 1, 2 or 3");
+			input.next();
+		}
+	}
+	*/
+	
+	// while (!rightInput);
 	
 	// one player turn
 	
-	
 	public static void onePlayerTurn(Player p) {
 		
-		outerloop:
-		while (true) {
-			
-			// prompt for letters until player says "yes"
-			ArrayList<Square> squareList = promptPlayerForSquareList(p);
-			
-			if (board.isAligned()) {
-				HashSet<ArrayList<Square>> bucket = makeSetOutOfWordLists(squareList);
+		System.out.println("-------------------------------");
+		System.out.println(p.getName() + "'s turn  |");
+		System.out.println("-------------------------------");
+		
+		System.out.println();
+		System.out.println(p.getName() + "'s rack: ");
+		ArrayList<Tile> playerRack = p.getRack();
+		System.out.println();
+		
+		board.paintBoard();
+		System.out.println();
+		
+		System.out.println("3 options (Choose 1, 2 or 3) : ");
+		System.out.println();
+		System.out.println(" (1) Enter Squares");
+		System.out.println(" (2) Pass turn");
+		System.out.println(" (3) Exchange rack");
+		
+		int answer = 0;
+		boolean rightInput = false;
+		
+		do {
+			try {
+				answer = input.nextInt();
 				
-				
-				ArrayList<String> listOfWords = board.getWords(bucket);
-				
-				System.out.println("The list of words are: ");
-				for (String string : listOfWords)
-					System.out.println(string + " ");
-				
-				if (listOfWords.isEmpty()) {
-					System.out.println();
-					System.out.println("Word too small! Try again");
-					undoMove(squareList, p);
-					
-					System.out.println("move undid");
-					
-					// redo while loop 
+				if (answer == 1 | answer == 2 | answer == 3) {
+					rightInput = true;
 				}
-				
-				// if list of words is not empty
 				else {
-					for (String s : listOfWords) {
-						String lowerCase = s.toLowerCase();
-						
-						int scoresOfLetters;
-						
-						if (dictionary.isValidWord(lowerCase)) {
+					System.out.println("Input has to be either 1, 2 or 3");
+					System.out.println(" (1) Enter Squares");
+					System.out.println(" (2) Pass turn");
+					System.out.println(" (3) Exchange rack");
+				}
+			}
+			
+			catch (Exception e) {
+				System.out.println("Input has to be 1, 2 or 3");
+				input.next();
+			}
+		}
+		while (!rightInput);
+		
+		
+		
+		// boolean rightInput = false;
+		// int answer = input.nextInt();
+		
+			if (answer == 1) {
+			
+						outerloop:
+						while (true) {
 							
-							scoresOfLetters = scoreSquares(bucket);
-							p.changeScore(scoresOfLetters);
-							displayRacksAndScores();
-							refillRack(p);
-							
-							break outerloop;
-						}
+									// prompt for letters until player says "yes"
+									ArrayList<Square> squareList = promptPlayerForSquareList(p);
+									
+									if (board.isAligned()) {
+										HashSet<ArrayList<Square>> bucket = makeSetOutOfWordLists(squareList);
+										
+										
+										ArrayList<String> listOfWords = board.getWords(bucket);
+										
+										System.out.println();
+										System.out.println("The list of words are: ");
+										for (String string : listOfWords)
+											System.out.println(string + " ");
+										
+										if (listOfWords.isEmpty()) {
+											System.out.println();
+											System.out.println("Word too small! Try again");
+											undoMove(squareList, p);
+											
+											System.out.println("move undid");
+											
+											// redo while loop 
+										}
+										
+										// if list of words is not empty
+										else {
+											
+											boolean isValidWords = true;
+											
+											for (String s : listOfWords) {
+												String lowerCase = s.toLowerCase();
+												
+												int scoresOfLetters;
+												
+												if (dictionary.isValidWord(lowerCase)) {
+													
+													scoresOfLetters = scoreSquares(bucket);
+													p.changeScore(scoresOfLetters);
+													displayRacksAndScores();
+													refillRack(p);
+													
+													break outerloop;
+												}
+												
+												else {
+													isValidWords = false;
+												}
+											}
+											
+											if (isValidWords == false) {
+												System.out.println();
+												System.out.println("Not valid words! Try again");
+												undoMove(squareList, p);
+												board.paintBoard();
+											}
+											
+										}
+							}
 						
 						else {
-							System.out.println();
-							System.out.println("Not valid words! Try again");
+							System.out.println("Board is not aligned! Try again");
 							undoMove(squareList, p);
+							board.paintBoard();
 						}
-					}
 				}
+				nextTurn();
+				increaseMoveCount();
 			}
 			
-			else {
-				System.out.println("Board is not aligned! Try again");
-				undoMove(squareList, p);
+			else if (answer == 2) {
+				nextTurn();
 			}
-		} 
+			
+			else if (answer == 3) {
+				exchangeTilesInRack(p);
+				nextTurn();
+				System.out.println();
+				System.out.println("\nTiles exchanged - next player's turn");
+			}
 	}
-	
+		
 	public static void displayRacksAndScores () {
 		for (Player player : players) {
 			System.out.println(player.getName() + "'s rack:          " + player.getName() + "'s score: " + player.getScore());
@@ -149,6 +251,7 @@ public class Game {
 			
 			if (answer == undo) {
 				undoSquare(p, s, squareList);
+				board.paintBoard();
 			}
 			
 			// if player is done entering squares
@@ -203,6 +306,7 @@ public class Game {
 							System.out.println("You have to place one of the first tiles on (7, 7)! Try again");
 							moveCount = 0;
 							undoMove(squareList, p);
+							board.paintBoard();
 							squareList = new ArrayList<Square>();
 						}
 				}
@@ -388,21 +492,11 @@ public class Game {
 		
 		do {
 			try {
-				System.out.println("-------------------------------");
-				System.out.println(player.getName() + "'s turn");
-				//System.out.println("3 options (Choose 1, 2 or 3) : ");
-				System.out.println();
-				System.out.println(" (1) Enter letter from the rack, row and col [0-14] , all separated by spaces: ");
-				//System.out.println(" (2) Pass turn");
-				//System.out.println(" (3) Exchange rack");
-				
-				System.out.println();
 				System.out.println(player.getName() + "'s rack: ");
-				ArrayList<Tile> playerRack = player.getRack();
+				player.paintRack();
 				System.out.println();
-				
-				board.paintBoard();
 				System.out.println();
+				System.out.println("Enter letter from the rack, row and col [0-14] , all separated by spaces: ");
 				
 				char letter = Character.toUpperCase(input.next().charAt(0));
 				int row = input.nextInt();
