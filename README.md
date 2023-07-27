@@ -1,3 +1,3 @@
 # CSE260
 
-Scrabble ( I made this in like a weekend LOL so it's just console)
+Scrabble ( I made this over a weekend sprint LOL so it's just console)
