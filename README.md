@@ -1,3 +1,3 @@
 # CSE260
 
-Scrabble ( JavaFX GUI very buggy so it's just console for now)
+Scrabble ( I made this in like a weekend LOL so it's just console)
